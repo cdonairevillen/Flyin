@@ -1,0 +1,9 @@
+Proyecto fly-in drone simulator — simulación de grafos con drones en Python. Archivos clave: drone.py, simulation.py, visualizer.py (pygame), parser.py, graph.py, dijkstra.py, path.py, link.py, zone.py, colors.py.
+Lógica importante:
+
+Zonas restricted: el drone entra al link con in_transit=True, aterriza al turno siguiente, activa restricted_penalty y _landed_this_phase (bloquea movimiento ese turno)
+_landed_this_phase=True para cualquier aterrizaje desde link, no solo restricted
+Movimiento normal: atómico (zona→zona en un turno), usa link como waypoint visual
+Spawn: el nuevo drone no se mueve en su turno de spawn
+Historial: {on_link, link_a, link_b, from, to} por turno
+Visualizador: flag leaving_link para distinguir zona→link vs link→zona
