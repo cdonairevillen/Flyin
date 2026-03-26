@@ -155,9 +155,6 @@ class Simulation():
             "from": None,
             "to": start_zone.name,
         } for d in self.drones])
-        self.turn = 1
 
         while not self.finished():
             self.simulate_turn()
-
-        print(f"Finished in {self.turn - 1} turns")

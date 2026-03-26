@@ -1,23 +1,28 @@
+from zone import Zone
+from path import Path
+from link import Link
+
+
 class Drone():
 
-    def __init__(self, id, path):
+    def __init__(self, id: int, path: Path) -> None:
 
-        self.id = id
-        self.path = path
-        self.position = 0
-        self.finished = False
-        self.in_transit = False
-        self.next_zone = None
-        self.current_link = None
-        self.restricted_penalty = False
-        self._landed_this_phase = False  # bloquea movimiento en fase 2 tras aterrizar desde link
+        self.id: int = id
+        self.path: Path = path
+        self.position: int = 0
+        self.finished: bool = False
+        self.in_transit: bool = False
+        self.next_zone: Zone | None = None
+        self.current_link: Link | None = None
+        self.restricted_penalty: bool = False
+        self._landed_this_phase: bool = False
 
-    def try_move(self):
+    def try_move(self) -> bool:
 
         if self.finished:
             return False
 
-        # --- En transito en link ---
+        # On link
         if self.in_transit:
 
             if not self.next_zone.has_capacity():
@@ -28,7 +33,6 @@ class Drone():
             self.next_zone.enter()
             self.position += 1
             self.in_transit = False
-            # Bloquear fase 2 siempre que se aterriza desde un link
             self._landed_this_phase = True
 
             if self.next_zone.zone_type == "restricted":
@@ -39,20 +43,20 @@ class Drone():
 
             return True
 
-        # Bloquear si acabo de aterrizar desde link en esta misma fase
+        # Block if landed from link this phase
         if self._landed_this_phase:
             return False
 
-        # --- Penalizacion restricted ---
+        # Restricted penalty
         if self.restricted_penalty:
 
             next_pos = self.position + 1
             if next_pos >= len(self.path.zones):
                 return False
 
-            current   = self.path.zones[self.position]
+            current = self.path.zones[self.position]
             next_zone = self.path.zones[next_pos]
-            link      = self.path.get_link(current, next_zone)
+            link = self.path.get_link(current, next_zone)
 
             if not link.has_capacity():
                 return False
@@ -61,18 +65,18 @@ class Drone():
             current.leave()
             link.enter()
             self.current_link = link
-            self.in_transit   = True
-            self.next_zone    = next_zone
+            self.in_transit = True
+            self.next_zone = next_zone
             return True
 
-        # --- Movimiento normal ---
+        # Normal movement
         next_pos = self.position + 1
         if next_pos >= len(self.path.zones):
             return False
 
-        current   = self.path.zones[self.position]
+        current = self.path.zones[self.position]
         next_zone = self.path.zones[next_pos]
-        link      = self.path.get_link(current, next_zone)
+        link = self.path.get_link(current, next_zone)
 
         if not link.has_capacity():
             return False
@@ -81,8 +85,8 @@ class Drone():
             current.leave()
             link.enter()
             self.current_link = link
-            self.in_transit   = True
-            self.next_zone    = next_zone
+            self.in_transit = True
+            self.next_zone = next_zone
             return True
 
         if not next_zone.has_capacity():
@@ -99,8 +103,8 @@ class Drone():
 
         return True
 
-    def reset_phase_flags(self):
+    def reset_phase_flags(self) -> None:
         self._landed_this_phase = False
 
-    def current_zone(self):
+    def current_zone(self) -> Zone:
         return self.path.zones[self.position]
