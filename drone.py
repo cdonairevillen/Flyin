@@ -38,8 +38,9 @@ class Drone():
         self.next_zone: Optional[Zone] = None
         self.current_link: Optional[Link] = None
         self.restricted_penalty: bool = False
-        self._landed_this_phase: bool = False
+        self.landed_this_phase: bool = False
         self.transit_time: int = 0
+        self.occupied_this_turn: Optional[Link] = None
 
     def try_move(self) -> bool:
         """
@@ -75,7 +76,7 @@ class Drone():
             self.next_zone.enter()
             self.position += 1
             self.in_transit = False
-            self._landed_this_phase = True
+            self.landed_this_phase = True
             if self.next_zone.is_end:
                 self.finished = True
             return True
@@ -85,7 +86,7 @@ class Drone():
             return False
 
         # PREVENT DOUBLE MOVEMENT IN THE SAME TURN
-        if self._landed_this_phase:
+        if self.landed_this_phase:
             return False
 
         next_pos: int = self.position + 1
@@ -115,11 +116,11 @@ class Drone():
             current.leave()
 
             link.enter()
-            link.leave()
+            self.occupied_this_turn = link
 
             next_zone.enter()
             self.position += 1
-            self._landed_this_phase = True
+            self.landed_this_phase = True
 
             if next_zone.is_end:
                 self.finished = True
@@ -134,7 +135,11 @@ class Drone():
         Allows the drone to move again in the next simulation turn.
         """
 
-        self._landed_this_phase = False
+        self.landed_this_phase = False
+
+        if self.occupied_this_turn:
+            self.occupied_this_turn.leave()
+            self.occupied_this_turn = None
 
     def current_zone(self) -> Any:
         """
