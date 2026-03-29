@@ -9,3 +9,4 @@ end_hub: goal 3 0 [color=red]
 connection: start-waypoint1 [max_link_capacity=3]
 connection: waypoint1-waypoint2 [max_link_capacity=3]
 connection: waypoint2-goal
+connection: start-goal [max_link_capacity=3]
