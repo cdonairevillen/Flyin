@@ -58,7 +58,6 @@ class Drone():
         if self.finished:
             return False
 
-        # LINK TRANSIT PHASE
         if self.in_transit:
             self.transit_time -= 1
             if self.transit_time > 0:
@@ -69,7 +68,6 @@ class Drone():
                 self.transit_time = 1
                 return False
 
-            # LANDING
             assert self.current_link is not None
             self.current_link.leave()
             self.current_link = None
@@ -85,7 +83,6 @@ class Drone():
             self.restricted_penalty = False
             return False
 
-        # PREVENT DOUBLE MOVEMENT IN THE SAME TURN
         if self.landed_this_phase:
             return False
 
