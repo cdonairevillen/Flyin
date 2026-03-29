@@ -1,5 +1,6 @@
 import heapq
 from zone import Zone
+from graph import Graph
 
 
 class Dijkstra():
@@ -13,7 +14,7 @@ class Dijkstra():
     Used for drone path assignment optimisation.
     """
 
-    def __init__(self, graph) -> None:
+    def __init__(self, graph: "Graph") -> None:
         """
         Initialize pathfinder.
 
@@ -40,17 +41,17 @@ class Dijkstra():
             Returns empty list if no path exists.
         """
 
-        distances = {
+        distances: dict = {
             zone: float('inf') for zone in self.graph.zones.values()
         }
 
-        previous = {
+        previous: dict = {
             zone: [] for zone in self.graph.zones.values()
         }
 
         distances[start] = 0
 
-        pq = [(0, self.counter, start)]
+        pq: list[tuple[float, int, Zone]] = [(0, self.counter, start)]
         self.counter += 1
         best_end_distance = float('inf')
 
@@ -72,7 +73,7 @@ class Dijkstra():
                 if new_cost < distances[n]:
                     distances[n] = new_cost
                     previous[n] = [current]
-                    heapq.heappush(pq, (new_cost, self.counter,  n))
+                    heapq.heappush(pq, (new_cost, self.counter, n))
                     self.counter += 1
 
                 elif new_cost == distances[n]:

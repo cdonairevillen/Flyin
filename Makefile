@@ -6,7 +6,7 @@ PIP         := $(VENV_BIN)/pip
 PY          := $(VENV_BIN)/python
 
 REQ         := requirements/requirements.txt
-DEPS_STAMP	:= $(VENV)/.deps_installed
+INSTALL_STAMP	:= $(VENV)/.deps_installed
 
 MYPY_FLAGS  := --warn-return-any \
 			   --warn-unused-ignores \
@@ -21,23 +21,23 @@ all: run
 $(VENV_BIN)/activate:
 	$(PYTHON) -m venv $(VENV)
 
-$(DEPS_STAMP): $(VENV_BIN)/activate $(REQ)
+$(INSTALL_STAMP): $(VENV_BIN)/activate $(REQ)
 	$(PIP) install --upgrade pip
 	$(PIP) install --no-cache-dir -r $(REQ)
 
-deps: $(DEPS_STAMP)
+install: $(INSTALL_STAMP)
 
-run: deps
+run: install
 	$(PY) main.py
 
-debug: deps
+debug: install
 	$(PY) -m pdb main.py
 
-lint: deps
+lint: install
 	$(PY) -m flake8 . --exclude .venv
 	$(PY) -m mypy . $(MYPY_FLAGS) --exclude .venv
 
-lint-strict: deps
+lint-strict: install
 	$(PY) -m flake8 . --exclude .venv
 	$(PY) -m mypy . --strict $(MYPY_FLAGS) --exclude .venv
 
@@ -53,8 +53,8 @@ re: clean run
 
 help:
 	@echo "make run          -> Run project"
-	@echo "make deps         -> Install dependencies"
+	@echo "make install         -> Install dependencies"
 	@echo "make lint         -> Run linters"
 	@echo "make clean        -> Clean project"
 
-.PHONY: all deps run debug clean lint lint-strict help re
+.PHONY: all install run debug clean lint lint-strict help re

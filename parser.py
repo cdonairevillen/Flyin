@@ -8,15 +8,17 @@ class Parser():
     """
     Parser for a fly-in configuration file.
 
-    Handles loading the file, parsing zones, connections, metadata, and number of drones.
+    Handles loading the file, parsing zones, connections,
+    metadata, and number of drones.
     """
 
     def __init__(self, filepath: str) -> None:
 
         """
         Parser for a fly-in configuration file.
-    
-        Handles loading the file, parsing zones, connections, metadata, and number of drones.
+
+        Handles loading the file, parsing zones, connections, metadata,
+        and number of drones.
         """
 
         self.filepath = filepath
@@ -26,7 +28,7 @@ class Parser():
         self.zones: dict[str, Zone] = {}
         self.start_zone: Zone | None = None
         self.end_zone: Zone | None = None
-        self.connections: list[tuple[str, str]] = []
+        self.connections: list[tuple[str, str, int]] = []
         self.VALID_ZONE_TYPES = {
             "normal",
             "priority",
@@ -39,7 +41,8 @@ class Parser():
 
     def load_file(self) -> None:
 
-        """Load the file content into `self.lines`, ignoring empty lines and comments."""
+        """Load the file content into `self.lines`,
+        ignoring empty lines and comments."""
 
         with open(self.filepath, "r") as file:
             for line in file:
@@ -190,7 +193,8 @@ class Parser():
             line: The line from the file.
 
         Returns:
-            A string indicating the line type: 'drones', 'start', 'hub', 'end', 'connection'.
+            A string indicating the line type:
+            'drones', 'start', 'hub', 'end', 'connection'.
         """
 
         if line.startswith("nb_drones:"):
@@ -231,7 +235,8 @@ class Parser():
         Execute the full parsing process over all loaded lines.
 
         Raises:
-            ValueError: If any parsing rule is violated (e.g., missing start/end zone, duplicates, invalid formats).
+            ValueError: If any parsing rule is violated
+            (e.g., missing start/end zone, duplicates, invalid formats).
         """
 
         for line in self.lines:

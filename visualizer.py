@@ -7,34 +7,63 @@ from link import Link
 
 class VisualDrone():
 
+    """
+    Represents a drone in the visualization system.
+    """
+
     def __init__(self, id: int, start_zone: Zone) -> None:
 
-        self.id = id
-        self.current = start_zone
-        self.target = start_zone
-        self.progress = 1.0
-        self.moving = False
-        self.visible = False
+        """
+        Initialize a VisualDrone instance.
+
+        Args:
+            id (int): Unique drone identifier.
+            start_zone (Zone): Zone where the drone starts.
+        """
+
+        self.id: int = id
+        self.current: Zone = start_zone
+        self.target: Zone = start_zone
+        self.progress: float = 1.0
+        self.moving: bool = False
+        self.visible: bool = False
 
         # Link state
-        self.on_link = False
-        self.leaving_link = False
-        self.link_zone_a = None
-        self.link_zone_b = None
+        self.on_link: bool = False
+        self.leaving_link: bool = False
+        self.link_zone_a: Zone | None = None
+        self.link_zone_b: Zone | None = None
 
 
 class Visualizer():
 
-    def __init__(self, history: dict, graph: Graph, nb_drones: int) -> None:
+    """
+    Visualizer class for simulating and rendering drone movements in a graph.
+
+    Manages drone states, positions, link transitions, and drawing of zones,
+    links, and drones using Pygame. Supports animations turn by turn.
+    """
+
+    def __init__(self, history: dict | list,
+                 graph: Graph, nb_drones: int) -> None:
+
+        """
+        Initialize the visualizer.
+
+        Args:
+            history (dict | list): Drone movement history.
+            graph (Graph): Graph containing zones and links.
+            nb_drones (int): Number of drones to simulate.
+        """
 
         pygame.init()
-        self.history = history
-        self.graph = graph
-        self.width = 1920
-        self.height = 1000
+        self.history: dict | list = history
+        self.graph: Graph = graph
+        self.width: int = 1920
+        self.height: int = 1000
 
-        xs = [z.x for z in self.graph.zones.values()]
-        ys = [z.y for z in self.graph.zones.values()]
+        xs: list = [z.x for z in self.graph.zones.values()]
+        ys: list = [z.y for z in self.graph.zones.values()]
         self.min_x, self.max_x = min(xs), max(xs)
         self.min_y, self.max_y = min(ys), max(ys)
 
@@ -51,17 +80,41 @@ class Visualizer():
         start = next(z for z in graph.zones.values() if z.is_start)
         self.drones = {i: VisualDrone(i, start)
                        for i in range(1, nb_drones + 1)}
-        self.zone_occupancy = {}
+        self.zone_occupancy: dict = {}
 
         self.start_turn()
 
-    def scale(self, x: float, y: float) -> float:
+    def scale(self, x: float, y: float) -> tuple[float, float]:
+
+        """
+        Scale zone coordinates to screen coordinates.
+
+        Args:
+            x (float): Original x-coordinate.
+            y (float): Original y-coordinate.
+
+        Returns:
+            tuple[float, float]: Scaled (x, y) coordinates for rendering.
+        """
+
         gw = max(self.max_x - self.min_x, 1)
         gh = max(self.max_y - self.min_y, 1)
         s = min((self.width - 200) / gw, (self.height - 200) / gh)
         return (x - self.min_x) * s + 100, (y - self.min_y) * s + 100
 
-    def zone_slot(self, zone: Zone, idx: int) -> float:
+    def zone_slot(self, zone: Zone, idx: int) -> tuple[float, float]:
+
+        """
+        Calculate the slot offset for a drone in a zone to avoid overlap.
+
+        Args:
+            zone (Zone): The zone in which to place the drone.
+            idx (int): Index of the drone within the zone.
+
+        Returns:
+            tuple[float, float]: Offset (x, y) relative to the zone center.
+        """
+
         size = 50
         max_slots = min(zone.max_drones, 9)
         cols = min(3, max_slots)
@@ -71,7 +124,23 @@ class Visualizer():
         return (size / (cols+1) * (c+1) - size/2,
                 size / (rows+1) * (r+1) - size/2)
 
-    def link_point(self, zone_a: Zone, zone_b: Zone, drone_id: int, capacity: int) -> float:
+    def link_point(self, zone_a: Zone,
+                   zone_b: Zone,
+                   drone_id: int,
+                   capacity: int) -> tuple[float, float]:
+
+        """
+        Calculate the position of a drone along a link between two zones.
+
+        Args:
+            zone_a (Zone): Start zone of the link.
+            zone_b (Zone): End zone of the link.
+            drone_id (int): Drone identifier.
+            capacity (int): Maximum number of drones allowed on the link.
+
+        Returns:
+            tuple[float, float]: Screen coordinates of the drone on the link.
+        """
         x1, y1 = self.scale(zone_a.x, zone_a.y)
         x2, y2 = self.scale(zone_b.x, zone_b.y)
         dx, dy = x2-x1, y2-y1
@@ -83,15 +152,49 @@ class Visualizer():
         return mx + px*offset, my + py*offset
 
     def get_link(self, zone_a: Zone, zone_b: Zone) -> Link | None:
+
+        """
+        Retrieve the link object connecting two zones.
+
+        Args:
+            zone_a (Zone): First zone.
+            zone_b (Zone): Second zone.
+
+        Returns:
+            Link | None: The link object if found, else None.
+        """
+
         for link in zone_a.links:
             if link.zone_a == zone_b or link.zone_b == zone_b:
                 return link
         return None
 
     def ease(self, t: float) -> float:
+
+        """
+        Smooth easing function for animation transitions.
+
+        Args:
+            t (float): Normalized progress (0.0 to 1.0).
+
+        Returns:
+            float: Adjusted progress after easing.
+        """
         return t * t * (3 - 2*t)
 
-    def zone_pos(self, zone: Zone, drone: VisualDrone) -> float:
+    def zone_pos(self, zone: Zone, drone: VisualDrone) -> tuple[float, float]:
+
+        """
+        Compute screen position of a drone in a zone, including slot offsets.
+
+        Args:
+            zone (Zone): Zone where the drone is located.
+            drone (VisualDrone): Drone to position.
+
+        Returns:
+            tuple[float, float]: Screen coordinates of the drone.
+        """
+
         occ = self.zone_occupancy.get(zone.name, [])
         try:
             idx = occ.index(drone)
@@ -102,12 +205,21 @@ class Visualizer():
         return zx+sx, zy+sy
 
     def clear_link(self, drone: VisualDrone) -> None:
+
+        """
+        Reset a drone's link state after finishing a link traversal.
+
+        Args:
+            drone (VisualDrone): Drone whose link state will be cleared.
+        """
         drone.on_link = False
         drone.leaving_link = False
         drone.link_zone_a = None
         drone.link_zone_b = None
 
     def draw_links(self) -> None:
+
+        """Draw all links between zones on the screen."""
         for zone in self.graph.zones.values():
             x1, y1 = self.scale(zone.x, zone.y)
             for link in zone.links:
@@ -128,6 +240,8 @@ class Visualizer():
                                            3, 1)
 
     def draw_zones(self) -> None:
+
+        """Draw all zones and their drone slots on the screen."""
         size = 50
         for zone in self.graph.zones.values():
             x, y = self.scale(zone.x, zone.y)
@@ -146,6 +260,8 @@ class Visualizer():
                                    (int(x+sx), int(y+sy)), 4, 1)
 
     def draw_drones(self) -> None:
+
+        """Draw all visible drones on the screen."""
         for drone in self.drones.values():
             if not drone.visible:
                 continue
@@ -157,11 +273,24 @@ class Visualizer():
                                (255, 255, 255),
                                (int(x), int(y)), 8, 2)
 
-    def drone_position(self, drone: VisualDrone) -> Zone:
+    def drone_position(self, drone: VisualDrone) -> tuple[float, float]:
+
+        """
+        Calculate the current screen position of a drone,
+        considering movement state.
+
+        Args:
+            drone (VisualDrone): Drone to calculate position for.
+
+        Returns:
+            tuple[float, float]: Current screen coordinates of the drone.
+        """
 
         # staying
         if not drone.moving:
             if drone.on_link:
+                assert drone.link_zone_a is not None
+                assert drone.link_zone_b is not None
                 link = self.get_link(drone.link_zone_a, drone.link_zone_b)
                 cap = link.max_drones if link else 1
                 return self.link_point(drone.link_zone_a, drone.link_zone_b,
@@ -172,6 +301,8 @@ class Visualizer():
 
         # Zone to link
         if drone.on_link and not drone.leaving_link:
+            assert drone.link_zone_a is not None
+            assert drone.link_zone_b is not None
             link = self.get_link(drone.link_zone_a, drone.link_zone_b)
             cap = link.max_drones if link else 1
             lx, ly = self.link_point(drone.link_zone_a, drone.link_zone_b,
@@ -181,6 +312,8 @@ class Visualizer():
 
         # Link to zone
         if drone.leaving_link:
+            assert drone.link_zone_a is not None
+            assert drone.link_zone_b is not None
             link = self.get_link(drone.link_zone_a, drone.link_zone_b)
             cap = link.max_drones if link else 1
             lx, ly = self.link_point(drone.link_zone_a, drone.link_zone_b,
@@ -209,6 +342,10 @@ class Visualizer():
 
     def render(self) -> None:
 
+        """
+        Update the simulation, animate drones, and render the current frame.
+        """
+
         dt = self.clock.tick(60) / 1000
 
         if self.animating:
@@ -232,7 +369,7 @@ class Visualizer():
                 self.turn += 1
 
         # Zone occupancy
-        zone_occupancy = {}
+        zone_occupancy: dict[str, list[VisualDrone]] = {}
         for drone in self.drones.values():
             if not drone.visible or drone.on_link or drone.leaving_link:
                 continue
@@ -250,6 +387,10 @@ class Visualizer():
         pygame.display.flip()
 
     def start_turn(self) -> None:
+
+        """
+        Initialize drone movements for the current turn based on the history.
+        """
 
         if self.turn >= len(self.history):
             return
@@ -278,6 +419,8 @@ class Visualizer():
 
                 if drone.on_link:
                     # Link to zone
+                    assert drone.link_zone_a is not None
+                    assert drone.link_zone_b is not None
                     drone.leaving_link = True
                     drone.on_link = False
                 else:
@@ -297,6 +440,10 @@ class Visualizer():
         self.animating = True
 
     def key_input(self) -> None:
+
+        """
+        Handle Pygame events, including quit and key presses.
+        """
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

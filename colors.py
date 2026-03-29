@@ -131,7 +131,7 @@ class Colors(Enum):
         Stops when user interrupts execution.
         """
 
-        offset = 0
+        offset = float()
         try:
             while True:
                 output = ""

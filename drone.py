@@ -1,11 +1,32 @@
 from zone import Zone
 from path import Path
 from link import Link
+from typing import Any
 
 
 class Drone():
 
     def __init__(self, id: int, path: Path) -> None:
+
+        """
+        Initialize a drone.
+
+        Args:
+            id: Unique identifier for the drone.
+            path: Path object representing the sequence of zones
+                  the drone will traverse.
+
+        Attributes:
+            position: Current index in the path's zone list.
+            finished: True if the drone has reached its end zone.
+            in_transit: True if the drone is currently on a link.
+            next_zone: Next zone the drone is moving to, if in transit.
+            current_link: Current link the drone is traversing, if any.
+            restricted_penalty: True if drone is blocked due to entering a
+                restricted zone.
+            _landed_this_phase: Internal flag to prevent multiple moves in
+                the same phase.
+        """
 
         self.id: int = id
         self.path: Path = path
@@ -19,15 +40,30 @@ class Drone():
 
     def try_move(self) -> bool:
 
+        """
+        Attempt to move the drone along its path.
+
+        Handles:
+            - Moving from zone to link.
+            - Moving from link to zone.
+            - Restricted zone penalties.
+            - Normal movement between zones.
+
+        Returns:
+            True if the drone successfully moved this phase, False otherwise.
+        """
+
         if self.finished:
             return False
 
         # On link
         if self.in_transit:
 
+            assert self.next_zone is not None
             if not self.next_zone.has_capacity():
                 return False
 
+            assert self.current_link is not None
             self.current_link.leave()
             self.current_link = None
             self.next_zone.enter()
@@ -58,6 +94,7 @@ class Drone():
             next_zone = self.path.zones[next_pos]
             link = self.path.get_link(current, next_zone)
 
+            assert link is not None
             if not link.has_capacity():
                 return False
 
@@ -78,6 +115,7 @@ class Drone():
         next_zone = self.path.zones[next_pos]
         link = self.path.get_link(current, next_zone)
 
+        assert link is not None
         if not link.has_capacity():
             return False
 
@@ -89,6 +127,7 @@ class Drone():
             self.next_zone = next_zone
             return True
 
+        assert next_zone is not None
         if not next_zone.has_capacity():
             return False
 
@@ -104,7 +143,20 @@ class Drone():
         return True
 
     def reset_phase_flags(self) -> None:
+
+        """
+        Reset internal phase flags at the start of each simulation phase.
+
+        Clears the _landed_this_phase flag to allow movement in the next phase.
+        """
         self._landed_this_phase = False
 
-    def current_zone(self) -> Zone:
+    def current_zone(self) -> Any:
+
+        """
+        Get the current zone the drone occupies.
+
+        Returns:
+            The Zone object corresponding to the drone's current position.
+        """
         return self.path.zones[self.position]

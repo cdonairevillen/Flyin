@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from colors import Colors
+from typing import Any
 
 
 @dataclass
@@ -63,7 +64,7 @@ class Zone():
             return 1
 
     @property
-    def rgb(self) -> tuple[int, int, int]:
+    def rgb(self) -> Any:
         """
         Returns RGB color for visualization.
 
