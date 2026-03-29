@@ -144,7 +144,7 @@ class Simulation():
 
         # Turn 0: show all drones at start
         start_zone = self.drones[0].path.zones[0]
-        print("Turn: 0")
+        print(f"Turn: {self.turn}")
         tokens = [f"D{d.id}-{self.colored(start_zone.name, start_zone.color)}"
                   for d in self.drones]
         print(" ".join(tokens))
@@ -155,6 +155,7 @@ class Simulation():
             "from": None,
             "to": start_zone.name,
         } for d in self.drones])
+        self.turn += 1
 
         while not self.finished():
             self.simulate_turn()

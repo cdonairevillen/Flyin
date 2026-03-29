@@ -78,13 +78,4 @@ All maps are designed to be solvable with a well-implemented algorithm. However:
 
 ## Visual Representation
 
-Maps use color coding for enhanced understanding:
-- 🟢 **Green**: Start/End zones
-- 🔵 **Blue**: Normal paths
-- 🟡 **Yellow**: Junction/merge points
-- 🟠 **Orange**: Bottlenecks/gates
-- 🔴 **Red**: Dead ends/traps
-- 🟣 **Purple**: Restricted zones
-- 🔵 **Cyan**: Priority zones
-
-Use the `--visual` flag to see colored terminal output during simulation!
+Maps use color coding for enhanced understanding using the given colors and setting the default for those are not 

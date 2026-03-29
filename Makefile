@@ -46,7 +46,6 @@ clean:
 	rm -rf .pytest_cache
 	rm -rf .mypy_cache
 	rm -rf dist
-	rm -rf output.txt
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 
 re: clean run

@@ -82,8 +82,6 @@ class Visualizer():
                        for i in range(1, nb_drones + 1)}
         self.zone_occupancy: dict = {}
 
-        self.start_turn()
-
     def scale(self, x: float, y: float) -> tuple[float, float]:
 
         """
@@ -366,7 +364,6 @@ class Visualizer():
 
             if all_done:
                 self.animating = False
-                self.turn += 1
 
         # Zone occupancy
         zone_occupancy: dict[str, list[VisualDrone]] = {}
@@ -450,9 +447,10 @@ class Visualizer():
                 self.running = False
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE and not self.animating:
-                    if self.turn >= len(self.history):
+                    if self.turn >= len(self.history) - 1:
                         self.running = False
                     else:
+                        self.turn += 1
                         self.start_turn()
                 if event.key == pygame.K_ESCAPE:
                     self.running = False
