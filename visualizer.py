@@ -274,71 +274,41 @@ class Visualizer():
                                (int(x), int(y)), 8, 2)
 
     def drone_position(self, drone: VisualDrone) -> tuple[float, float]:
-
-        """
-        Calculate the current screen position of a drone,
-        considering movement state.
-
-        Args:
-            drone (VisualDrone): Drone to calculate position for.
-
-        Returns:
-            tuple[float, float]: Current screen coordinates of the drone.
-        """
-
-        # staying
         if not drone.moving:
             if drone.on_link:
                 assert drone.link_zone_a is not None
                 assert drone.link_zone_b is not None
-                link = self.get_link(drone.link_zone_a, drone.link_zone_b)
+                link = self.get_link(drone.link_zone_a,
+                                     drone.link_zone_b)
                 cap = link.max_drones if link else 1
-                return self.link_point(drone.link_zone_a, drone.link_zone_b,
+                return self.link_point(drone.link_zone_a,
+                                       drone.link_zone_b,
                                        drone.id, cap)
             return self.zone_pos(drone.current, drone)
 
         t = self.ease(drone.progress)
 
-        # Zone to link
-        if drone.on_link and not drone.leaving_link:
+        if drone.leaving_link and drone.link_zone_a:
             assert drone.link_zone_a is not None
             assert drone.link_zone_b is not None
-            link = self.get_link(drone.link_zone_a, drone.link_zone_b)
-            cap = link.max_drones if link else 1
-            lx, ly = self.link_point(drone.link_zone_a, drone.link_zone_b,
-                                     drone.id, cap)
-            x1, y1 = self.zone_pos(drone.current, drone)
-            return x1 + (lx-x1)*t, y1 + (ly-y1)*t
-
-        # Link to zone
-        if drone.leaving_link:
-            assert drone.link_zone_a is not None
-            assert drone.link_zone_b is not None
-            link = self.get_link(drone.link_zone_a, drone.link_zone_b)
-            cap = link.max_drones if link else 1
-            lx, ly = self.link_point(drone.link_zone_a, drone.link_zone_b,
-                                     drone.id, cap)
+            lx, ly = self.link_point(drone.link_zone_a,
+                                     drone.link_zone_b,
+                                     drone.id, 1)
             x2, y2 = self.zone_pos(drone.target, drone)
             return lx + (x2-lx)*t, ly + (y2-ly)*t
 
-        # Zone to zone movement
+        if drone.on_link and not drone.leaving_link:
+            x1, y1 = self.zone_pos(drone.current, drone)
+            assert drone.link_zone_a is not None
+            assert drone.link_zone_b is not None
+            lx, ly = self.link_point(drone.link_zone_a,
+                                     drone.link_zone_b,
+                                     drone.id, 1)
+            return x1 + (lx-x1)*t, y1 + (ly-y1)*t
+
         x1, y1 = self.zone_pos(drone.current, drone)
-        x2, y2 = self.zone_pos(drone.target,  drone)
-
-        link = self.get_link(drone.current, drone.target)
-        if link:
-            cap = link.max_drones
-            lx, ly = self.link_point(drone.current,
-                                     drone.target,
-                                     drone.id, cap)
-            if drone.progress < 0.5:
-                t2 = self.ease(drone.progress * 2)
-                return x1+(lx-x1)*t2, y1+(ly-y1)*t2
-            else:
-                t2 = self.ease((drone.progress-0.5)*2)
-                return lx+(x2-lx)*t2, ly+(y2-ly)*t2
-
-        return x1+(x2-x1)*t, y1+(y2-y1)*t
+        x2, y2 = self.zone_pos(drone.target, drone)
+        return x1 + (x2-x1)*t, y1 + (y2-y1)*t
 
     def render(self) -> None:
 
@@ -386,29 +356,36 @@ class Visualizer():
         pygame.display.flip()
 
     def start_turn(self) -> None:
-
         """
-        Initialize drone movements for the current turn based on the history.
-        """
+        Initialize drone states at the start of the current turn based on the
+        recorded history.
 
+        This prepares each drone for animation or movement for this turn:
+            - Drones on links continue moving or start new link traversal.
+            - Drones landing from links transition to zones.
+            - Drones moving instantly between zones update their position.
+            - Drones staying in the same zone remain idle.
+
+        Uses:
+            self.turn (int): Current simulation turn.
+            self.history (List[Dict]): Recorded movements per turn.
+            self.drones (List[Drone]): List of all drones.
+            self.graph.zones (Dict[str, Zone]): Mapping of zone names to Zones
+        """
         if self.turn >= len(self.history):
             return
 
         for move in self.history[self.turn]:
-
-            drone = self.drones[move["drone"]]
+            drone: VisualDrone = self.drones[move["drone"]]
             drone.visible = True
 
             if move["on_link"]:
-                # Zone to link
-                zone_a = self.graph.zones[move["link_a"]]
-                zone_b = self.graph.zones[move["link_b"]]
-                if drone.on_link and drone.link_zone_a == zone_a \
-                   and drone.link_zone_b == zone_b:
+                zone_a: Zone = self.graph.zones[move["link_a"]]
+                zone_b: Zone = self.graph.zones[move["link_b"]]
+
+                if drone.on_link and drone.link_zone_a == zone_a:
                     drone.moving = False
-
                 else:
-
                     drone.current = zone_a
                     drone.target = zone_b
                     drone.link_zone_a = zone_a
@@ -419,27 +396,23 @@ class Visualizer():
                     drone.moving = True
 
             else:
-                to_zone = self.graph.zones[move["to"]]
+                to_zone: Zone = self.graph.zones[move["to"]]
 
                 if drone.on_link:
-                    # Link to zone
-                    assert drone.link_zone_a is not None
-                    assert drone.link_zone_b is not None
+                    drone.target = to_zone
                     drone.leaving_link = True
                     drone.on_link = False
+                    drone.progress = 0
+                    drone.moving = True
+
+                elif drone.current != to_zone:
+                    self.clear_link(drone)
                     drone.target = to_zone
                     drone.progress = 0
                     drone.moving = True
-                else:
 
-                    if drone.current != to_zone:
-                        drone.leaving_link = True
-                        drone.on_link = False
-                        drone.target = to_zone
-                        drone.progress = 0
-                        drone.moving = True
-                    else:
-                        drone.moving = False
+                else:
+                    drone.moving = False
 
         self.animating = True
 
