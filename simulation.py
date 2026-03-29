@@ -89,14 +89,8 @@ class Simulation():
 
         before_pos: Dict[int, int] = {d.id: d.position for d in self.drones}
 
-        # Phase 1: drones in transit try to land
         for drone in drones_sorted:
-            if drone.in_transit:
-                drone.try_move()
-
-        # Phase 2: drones stopped try to move
-        for drone in drones_sorted:
-            if not drone.in_transit and not drone.finished:
+            if not drone.finished:
                 drone.try_move()
 
         # Phase 3: build output and history

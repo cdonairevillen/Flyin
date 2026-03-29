@@ -82,6 +82,8 @@ class Visualizer():
                        for i in range(1, nb_drones + 1)}
         self.zone_occupancy: dict = {}
 
+        self.start_turn()
+
     def scale(self, x: float, y: float) -> tuple[float, float]:
 
         """
@@ -401,15 +403,20 @@ class Visualizer():
                 # Zone to link
                 zone_a = self.graph.zones[move["link_a"]]
                 zone_b = self.graph.zones[move["link_b"]]
+                if drone.on_link and drone.link_zone_a == zone_a \
+                   and drone.link_zone_b == zone_b:
+                    drone.moving = False
 
-                drone.current = zone_a
-                drone.target = zone_b
-                drone.link_zone_a = zone_a
-                drone.link_zone_b = zone_b
-                drone.on_link = True
-                drone.leaving_link = False
-                drone.progress = 0
-                drone.moving = True
+                else:
+
+                    drone.current = zone_a
+                    drone.target = zone_b
+                    drone.link_zone_a = zone_a
+                    drone.link_zone_b = zone_b
+                    drone.on_link = True
+                    drone.leaving_link = False
+                    drone.progress = 0
+                    drone.moving = True
 
             else:
                 to_zone = self.graph.zones[move["to"]]
@@ -420,19 +427,19 @@ class Visualizer():
                     assert drone.link_zone_b is not None
                     drone.leaving_link = True
                     drone.on_link = False
+                    drone.target = to_zone
+                    drone.progress = 0
+                    drone.moving = True
                 else:
-                    # Movement zone to zone
-                    self.clear_link(drone)
 
-                drone.target = to_zone
-                drone.progress = 0
-                drone.moving = True
-
-                # Spawn
-                if not move.get("from") and not drone.leaving_link:
-                    drone.current = to_zone
-                    drone.progress = 1.0
-                    drone.moving = False
+                    if drone.current != to_zone:
+                        drone.leaving_link = True
+                        drone.on_link = False
+                        drone.target = to_zone
+                        drone.progress = 0
+                        drone.moving = True
+                    else:
+                        drone.moving = False
 
         self.animating = True
 

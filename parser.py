@@ -147,10 +147,14 @@ class Parser():
 
         if zone_type == "start":
             zone.is_start = True
+            if zone.max_drones == 1:
+                zone.max_drones = self.nb_drones
             self.start_zone = zone
 
         if zone_type == "end":
             zone.is_end = True
+            if zone.max_drones == 1:
+                zone.max_drones = self.nb_drones
             self.end_zone = zone
 
         self.zones[name] = zone
