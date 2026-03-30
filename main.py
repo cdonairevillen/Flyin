@@ -1,4 +1,4 @@
-from src.fly_in import Fly_in
+from fly_in import Fly_in
 
 if __name__ == "__main__":
 
