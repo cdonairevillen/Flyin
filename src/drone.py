@@ -1,6 +1,6 @@
-from zone import Zone
-from path import Path
-from link import Link
+from .zone import Zone
+from .path import Path
+from .link import Link
 from typing import Optional, Any
 
 

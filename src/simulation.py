@@ -1,4 +1,4 @@
-from colors import Colors
+from .colors import Colors
 from typing import Any, List, Dict
 
 
@@ -43,7 +43,7 @@ class Simulation():
         """
         Initialize all drones at the start and assign them to paths.
         """
-        from drone import Drone
+        from .drone import Drone
         for i in range(self.nb_drones):
             best = min(self.paths, key=lambda p: p.total_time())
             best.assign()

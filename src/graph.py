@@ -1,5 +1,5 @@
-from zone import Zone
-from link import Link
+from .zone import Zone
+from .link import Link
 
 
 class Graph():

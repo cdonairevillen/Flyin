@@ -1,8 +1,8 @@
 import pygame
-from colors import Colors
-from graph import Graph
-from zone import Zone
-from link import Link
+from .colors import Colors
+from .graph import Graph
+from .zone import Zone
+from .link import Link
 
 
 class VisualDrone():

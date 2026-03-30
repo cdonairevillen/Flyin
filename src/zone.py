@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from colors import Colors
+from .colors import Colors
 from typing import Any
 
 
@@ -17,7 +17,7 @@ class Zone():
     Used both by pathfinding and simulation movement logic.
     """
 
-    from link import Link
+    from .link import Link
     name: str
     x: int
     y: int

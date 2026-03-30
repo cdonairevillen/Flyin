@@ -1,6 +1,6 @@
 import heapq
-from zone import Zone
-from graph import Graph
+from .zone import Zone
+from .graph import Graph
 
 
 class Dijkstra():

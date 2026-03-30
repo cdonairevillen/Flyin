@@ -1,6 +1,6 @@
 from typing import List
-from zone import Zone
-from colors import Colors
+from .zone import Zone
+from .colors import Colors
 
 
 class Parser():

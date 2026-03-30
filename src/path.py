@@ -1,4 +1,4 @@
-from zone import Zone
+from .zone import Zone
 from typing import Any
 
 

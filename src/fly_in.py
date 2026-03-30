@@ -1,9 +1,9 @@
-from parser import Parser
-from graph import Graph
-from dijkstra import Dijkstra
-from path import Path
-from simulation import Simulation
-from visualizer import Visualizer
+from .parser import Parser
+from .graph import Graph
+from .dijkstra import Dijkstra
+from .path import Path
+from .simulation import Simulation
+from .visualizer import Visualizer
 import pygame
 import sys
 

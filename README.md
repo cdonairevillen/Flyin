@@ -14,6 +14,8 @@ The project implements:
 
 ## Instructions
 
+   The progam has a Makefile wth instructions to run it. Once you instruct make run it will check and install al the dependencies needed and run the input.txt map gived in the root folder.
+
 1. **Requirements**
 
    * Python 3.10+
