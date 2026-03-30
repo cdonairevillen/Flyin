@@ -199,10 +199,22 @@ class Parser():
         a, b = main.split("-")
         a = a.strip()
         b = b.strip()
+
+        if a not in self.zones or b not in self.zones:
+            raise ValueError(f"Connection uses unknown zone: {a}-{b}")
+
+        if a == b:
+            raise ValueError(f"Self connection not allowed: {a}-{b}")
+
         capacity = int(metadata.get("max_link_capacity", 1))
 
         if capacity <= 0:
             raise ValueError(f"Invalid max_link_capacity between {a}-{b}")
+
+        key = tuple(sorted((a, b)))
+
+        if any((key[0], key[1]) == (x, y) for x, y, _ in self.connections):
+            raise ValueError(f"Duplicated connection detected: {a}-{b}")
 
         self.connections.append((a, b, capacity))
 

@@ -10,7 +10,7 @@ connection: start-waypoint1 [max_link_capacity=3]
 connection: waypoint1-waypoint2 [max_link_capacity=4]
 connection: waypoint2-goal [max_link_capacity=3]
 # connection: start-goal [max_link_capacity=3]
-
+connection: waypoint2-waypoint1 [max_link_capacity=4]
 
 
 

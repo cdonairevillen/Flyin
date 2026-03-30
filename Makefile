@@ -42,11 +42,11 @@ lint-strict: install
 	$(PY) -m mypy . --strict $(MYPY_FLAGS) --exclude .venv
 
 clean:
-	rm -rf $(VENV)
-	rm -rf .pytest_cache
-	rm -rf .mypy_cache
-	rm -rf dist
-	find . -type d -name "__pycache__" -exec rm -rf {} +
+	@ rm -rf $(VENV)
+	@ rm -rf .pytest_cache
+	@ rm -rf .mypy_cache
+	@ rm -rf dist
+	@ find . -type d -name "__pycache__" -exec rm -rf {} +
 
 re: clean run
 
