@@ -38,6 +38,8 @@ class Parser():
 
         self.check_start: int = 0
         self.check_end: int = 0
+        self.nb_drones_defined: bool = False
+        self.valid: bool = False
 
     def load_file(self) -> None:
 
@@ -71,7 +73,10 @@ class Parser():
             if "=" not in item:
                 raise ValueError(f"Invalid metadata: {item}")
 
-            key, value = item.split("=")
+            key, value = item.split("=", 1)
+
+            if key in result:
+                raise ValueError(f"Duplicated metadata key:{key}")
             result[key] = value
         return result
 
@@ -107,7 +112,17 @@ class Parser():
                 print(f"Invalid color: {metadata['color']}"
                       " Setted to the DEFAULT color")
         if "max_drones" in metadata:
-            zone.max_drones = int(metadata["max_drones"])
+            try:
+                value = int(metadata["max_drones"])
+
+                if value <= 0:
+                    raise ValueError
+
+                zone.max_drones = value
+
+            except ValueError:
+                raise ValueError(
+                    f"Invalid max_drones value: {metadata['max_drones']}")
 
     def parse_zone(self, line: str, zone_type: str) -> None:
 
@@ -186,6 +201,9 @@ class Parser():
         b = b.strip()
         capacity = int(metadata.get("max_link_capacity", 1))
 
+        if capacity <= 0:
+            raise ValueError(f"Invalid max_link_capacity between {a}-{b}")
+
         self.connections.append((a, b, capacity))
 
     def get_line_type(self, line: str) -> str:
@@ -246,6 +264,16 @@ class Parser():
         for line in self.lines:
             line_type = self.get_line_type(line)
 
+            if not self.nb_drones_defined:
+
+                if line_type != "drones":
+                    raise ValueError(
+                        "nb_drones must be the first config entry")
+
+                self.parse_drones(line)
+                self.nb_drones_defined = True
+                continue
+
             if self.check_start > 1:
                 raise ValueError("Multiples entries detected")
 
@@ -253,7 +281,7 @@ class Parser():
                 raise ValueError("Multiples exits detected")
 
             if line_type == "drones":
-                self.parse_drones(line)
+                raise ValueError("Multiple nb_drones entries detected")
 
             elif line_type in ("start", "hub", "end"):
                 self.parse_zone(line, line_type)
